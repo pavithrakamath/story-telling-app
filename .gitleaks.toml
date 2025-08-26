@@ -1,0 +1,58 @@
+# Gitleaks configuration for AI Storytelling Platform
+title = "AI Storytelling Platform - Gitleaks Config"
+
+[extend]
+# Use default gitleaks rules
+useDefault = true
+
+[[rules]]
+id = "API-Keys"
+description = "Detects API keys in various formats"
+regex = '''(?i)(api[_-]?key|secret[_-]?key|access[_-]?token)['":\s=]*['"]?[a-zA-Z0-9_\-]{20,}['"]?'''
+tags = ["api", "key", "secret"]
+
+[[rules]]
+id = "Gemini-API-Key"
+description = "Google Gemini API Key"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+tags = ["api", "google", "gemini"]
+
+[[rules]]
+id = "OpenAI-API-Key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{48}'''
+tags = ["api", "openai"]
+
+[[rules]]
+id = "Replicate-API-Token"
+description = "Replicate API Token"
+regex = '''r8_[a-zA-Z0-9]{40}'''
+tags = ["api", "replicate"]
+
+[[rules]]
+id = "Generic-Secret"
+description = "Generic secrets"
+regex = '''(?i)(password|passwd|secret|private[_-]?key)['":\s=]*['"]?[a-zA-Z0-9_\-!@#$%^&*()+=]{8,}['"]?'''
+tags = ["secret", "password"]
+
+# Global allowlist for false positives
+[allowlist]
+description = "Global allowlist for false positives"
+regexes = [
+  '''your_.*_api_key_here''',
+  '''your_.*_token_here''',
+  '''your_.*_secret_here''',
+  '''example_api_key''',
+  '''test_key_123''',
+  '''placeholder.*''',
+]
+paths = [
+  '''README\.md''',
+  '''DEVELOPER_GUIDE\.md''',
+  '''\.env\.example''',
+  '''docs/.*''',
+  '''.*\.test\.(js|ts|tsx)''',
+  '''.*\.spec\.(js|ts|tsx)''',
+  '''__tests__/.*''',
+  '''tests?/.*''',
+]

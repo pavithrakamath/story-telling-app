@@ -1,0 +1,47 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit hooks..."
+
+# Run lint-staged (ESLint, Prettier, TypeScript check)
+echo "🧹 Running linters and formatters..."
+npx lint-staged
+
+# Run gitleaks to detect secrets
+echo "🔐 Scanning for secrets with gitleaks..."
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks protect --staged --config=.gitleaks.toml; then
+    echo "❌ ERROR: Gitleaks detected potential secrets!"
+    echo "Please remove any API keys, passwords, or sensitive data."
+    echo "Check the output above for details."
+    exit 1
+  fi
+else
+  echo "⚠️  WARNING: Gitleaks not installed. Install with:"
+  echo "  macOS: brew install gitleaks"
+  echo "  Linux: https://github.com/gitleaks/gitleaks#installation"
+  
+  # Fallback basic check
+  echo "🔐 Running basic API key check (fallback)..."
+  if git diff --cached --name-only | xargs grep -l -E "(API_KEY|SECRET|TOKEN).*=.*[a-zA-Z0-9]{20}" 2>/dev/null; then
+    echo "❌ ERROR: Potential API keys detected in commit!"
+    echo "Please remove API keys and use environment variables instead."
+    exit 1
+  fi
+fi
+
+# Check for TODO or FIXME comments in production code
+echo "📝 Checking for unresolved TODOs..."
+if git diff --cached --name-only | grep -E "\.(ts|tsx|js|jsx)$" | xargs grep -l "TODO\|FIXME" 2>/dev/null; then
+  echo "⚠️  WARNING: Found TODO/FIXME comments in staged files."
+  echo "Consider resolving them before committing to main branch."
+fi
+
+# Check for console.log statements (optional warning)
+echo "🚨 Checking for console.log statements..."
+if git diff --cached --name-only | grep -E "\.(ts|tsx|js|jsx)$" | xargs grep -l "console\.log" 2>/dev/null; then
+  echo "⚠️  WARNING: Found console.log statements in staged files."
+  echo "Consider removing debug statements before committing."
+fi
+
+echo "✅ Pre-commit checks passed!"
